@@ -9,6 +9,12 @@
 
   <div class="container">
     <x-dashboard />
-    <x-network_connections />
+    <x-network_connections 
+      :connectedConnectionsCount='$connectedConnectionsCount' 
+      :pendingSentConnectionsCount='$pendingSentConnectionsCount'
+      :pendingReceivedConnectionsCount='$pendingReceivedConnectionsCount'
+      :rejectedConnectionsCount='$rejectedConnectionsCount'
+      :suggestedUsersCount='$suggestedUsersCount'
+    />
   </div>
 @endsection

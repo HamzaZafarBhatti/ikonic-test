@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,9 +15,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('get-suggested-connections', [HomeController::class, 'getSuggestedConnections']);
+Route::get('get-sent-request', [HomeController::class, 'getSentRequest']);
+
+Route::post('send-connection-request', [HomeController::class, 'sendConnectionRequest']);

@@ -41,4 +41,24 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function connectedConnections()
+    {
+        return $this->belongsToMany(User::class, 'user_connections', 'user_id', 'connection_id')->whereStatus('connected');
+    }
+
+    public function pendingSentConnections()
+    {
+        return $this->belongsToMany(User::class, 'user_connections', 'user_id', 'connection_id')->whereStatus('pending');
+    }
+
+    public function pendingReceivedConnections()
+    {
+        return $this->belongsToMany(User::class, 'user_connections', 'connection_id', 'user_id')->whereStatus('pending');
+    }
+
+    public function rejectedConnections()
+    {
+        return $this->belongsToMany(User::class, 'user_connections', 'user_id', 'connection_id')->whereStatus('rejected');
+    }
 }
