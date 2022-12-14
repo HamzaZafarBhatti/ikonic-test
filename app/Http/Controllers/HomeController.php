@@ -52,7 +52,11 @@ class HomeController extends Controller
     {
         $limit = $request->limit;
         $skip = $request->skip;
-        $connectedUsers = $this->connectedUsers($limit, $skip);
+        $connectedUsers = $this->connectedUsers(auth()->user()->id, $limit, $skip);
+        foreach($connectedUsers as $user) {
+            $connectionConnectedUsersCount = $this->connectionConnectedUsersCount($user->id, auth()->user()->id);
+            $user->commonUsers = $connectionConnectedUsersCount;
+        }
         return json_encode([
             'count' => count($connectedUsers),
             'data' => view('components.connection', ['connected' => $connectedUsers])->render()
@@ -83,6 +87,11 @@ class HomeController extends Controller
             default:
                 return view('components.request', ['requests' => []])->render();
         }
+    }
+
+    public function getConnectionsInCommon(Request $request)
+    {
+        return $request;
     }
 
     public function sendConnectionRequest(Request $request)
@@ -175,13 +184,20 @@ class HomeController extends Controller
         $userIds = Arr::collapse([$sentRequestUserIds, $receivedRequestUserIds]);
         return User::where('id', '!=', $userId)->whereNotIn('id', $userIds)->count();
     }
-    private function connectedUsers($limit, $skip)
+    private function connectedUsers($userId, $limit = null, $skip = null)
     {
-        $userId = auth()->user()->id;
         $forwardConnections = DB::table('user_connections')->where('user_id', $userId)->whereStatus(User::CONNECTED_STATUS)->pluck('connection_id');
         $reverseConnections = DB::table('user_connections')->where('connection_id', $userId)->whereStatus(User::CONNECTED_STATUS)->pluck('user_id');
         $userIds = Arr::collapse([$forwardConnections, $reverseConnections]);
-        return User::where('id', '!=', $userId)->whereIn('id', $userIds)->limit($limit)->offset($skip)->get();
+        return User::select('id', 'name', 'email')->where('id', '!=', $userId)->whereIn('id', $userIds)->limit($limit)->offset($skip)->get();
+    }
+    private function connectionConnectedUsersCount($userId, $connectionId)
+    {
+        $forwardConnections = DB::table('user_connections')->where('user_id', $userId)->whereStatus(User::CONNECTED_STATUS)->pluck('connection_id');
+        $reverseConnections = DB::table('user_connections')->where('connection_id', $userId)->whereStatus(User::CONNECTED_STATUS)->pluck('user_id');
+        $userIds = Arr::collapse([$forwardConnections, $reverseConnections]);
+        $users = User::select('id', 'name', 'email')->where('id', '!=', $userId)->where('id', '!=', $connectionId)->whereIn('id', $userIds);
+        return $users->count();
     }
     public function connectedUsersCount()
     {

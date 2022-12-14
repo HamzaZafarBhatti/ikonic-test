@@ -3,13 +3,14 @@ var contentId = 'content';
 var skipCounter = 0;
 var limit = 10;
 
-function ajaxGet(url, type, onSuccessFunction) {
+function ajaxGet(url, type, onSuccessFunction, isBeforeSend = 1, connectionId = 0) {
   $.ajax({
     url: url,
     type: type,
     dataType: 'json',
-    beforeSend: beforeSend,
+    beforeSend: isBeforeSend ? beforeSend : () => null,
     success: function (response) {
+      console.log(onSuccessFunction);
       onSuccessFunction(response)
     }
   })
@@ -51,8 +52,8 @@ function getMoreConnections() {
   // your code here...
 }
 
-function getConnectionsInCommon(userId, connectionId) {
-  // your code here...
+function getConnectionsInCommon(connectionId) {
+  ajaxGet(`/get-connections-in-common?connectionId=${connectionId}&limit=${limit}&skip=${skipCounter}`, 'get', renderInnerIndex, 0, connectionId)
 }
 
 function getMoreConnectionsInCommon(userId, connectionId) {
@@ -71,6 +72,16 @@ function renderIndex(response) {
   $("#content").removeClass('d-none')
 
   response['count'] < limit ? $("#load_more_btn_parent").addClass('d-none') : $("#load_more_btn_parent").removeClass('d-none')
+}
+
+function renderInnerIndex(response) {
+  
+  // $("#skeleton").addClass('d-none')
+  // $("#content").empty()
+  // $("#content").html(response['data'])
+  // $("#content").removeClass('d-none')
+
+  // response['count'] < limit ? $("#load_more_btn_parent").addClass('d-none') : $("#load_more_btn_parent").removeClass('d-none')
 }
 
 function reRenderIndex(response) {
@@ -144,6 +155,7 @@ function removeConnection(connectionId) {
 }
 
 function beforeSend() {
+  console.log('before Send')
   $("#content").addClass('d-none')
   $("#skeleton").removeClass('d-none')
 }
