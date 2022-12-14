@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id');
             $table->foreignId('connection_id');
-            $table->enum('status', ['connected', 'pending', 'rejected'])->nullable();
+            $table->enum('status', ['connected', 'pending'])->nullable();
             $table->timestamps();
         });
     }

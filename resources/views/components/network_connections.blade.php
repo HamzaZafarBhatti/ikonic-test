@@ -17,7 +17,7 @@
                         Requests({{ $pendingReceivedConnectionsCount }})</label>
 
                     <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off">
-                    <label class="btn btn-outline-primary" for="btnradio4" id="get_connections_btn">Connections
+                    <label class="btn btn-outline-primary" for="btnradio4" onclick="getRequests('received')"  id="get_connections_btn">Connections
                         ({{ $connectedConnectionsCount }})</label>
                 </div>
                 <hr>

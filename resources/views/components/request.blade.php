@@ -9,9 +9,9 @@
             </table>
             <div>
                 @if ($mode == 'sent')
-                    <button id="cancel_request_btn_{{ $item->id }}" class="btn btn-danger me-1" onclick="withdrawRequest({{ $item->id }})">Withdraw Request</button>
+                    <button id="cancel_request_btn_{{ $item->id }}" class="btn btn-danger me-1" onclick="deleteRequest('{{ $item->id }}')">Withdraw Request</button>
                 @else
-                    <button id="accept_request_btn_{{ $item->id }}" class="btn btn-primary me-1" onclick="acceptRequest({{ $item->id }})">Accept</button>
+                    <button id="accept_request_btn_{{ $item->id }}" class="btn btn-primary me-1" onclick="acceptRequest('{{ $item->id }}')">Accept</button>
                 @endif
             </div>
         </div>

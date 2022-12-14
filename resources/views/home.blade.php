@@ -13,7 +13,6 @@
       :connectedConnectionsCount='$connectedConnectionsCount' 
       :pendingSentConnectionsCount='$pendingSentConnectionsCount'
       :pendingReceivedConnectionsCount='$pendingReceivedConnectionsCount'
-      :rejectedConnectionsCount='$rejectedConnectionsCount'
       :suggestedUsersCount='$suggestedUsersCount'
     />
   </div>

@@ -12,6 +12,9 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    const PENDING_STATUS = 'pending';
+    const CONNECTED_STATUS = 'connected';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -55,10 +58,5 @@ class User extends Authenticatable
     public function pendingReceivedConnections()
     {
         return $this->belongsToMany(User::class, 'user_connections', 'connection_id', 'user_id')->whereStatus('pending');
-    }
-
-    public function rejectedConnections()
-    {
-        return $this->belongsToMany(User::class, 'user_connections', 'user_id', 'connection_id')->whereStatus('rejected');
     }
 }

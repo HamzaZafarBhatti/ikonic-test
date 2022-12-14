@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -22,6 +23,8 @@ Route::get('/', function () {
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('get-suggested-connections', [HomeController::class, 'getSuggestedConnections']);
-Route::get('get-sent-request', [HomeController::class, 'getSentRequest']);
+Route::get('get-request', [HomeController::class, 'getRequest']);
 
 Route::post('send-connection-request', [HomeController::class, 'sendConnectionRequest']);
+Route::post('delete-connection-request', [HomeController::class, 'deleteConnectionRequest']);
+Route::post('accept-connection-request', [HomeController::class, 'acceptConnectionRequest']);

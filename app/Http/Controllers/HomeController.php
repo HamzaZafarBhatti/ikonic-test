@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -30,11 +31,10 @@ class HomeController extends Controller
         $connectedConnectionsCount = $user->connectedConnections->count();
         $pendingSentConnectionsCount = $user->pendingSentConnections->count();
         $pendingReceivedConnectionsCount = $user->pendingReceivedConnections->count();
-        $rejectedConnectionsCount = $user->rejectedConnections->count();
         // return $user_ids;
         $suggestedUsersCount = $this->suggestedUsersCount();
         // return count($suggestedUsers);
-        return view('home', compact('connectedConnectionsCount', 'pendingSentConnectionsCount', 'pendingReceivedConnectionsCount', 'rejectedConnectionsCount', 'suggestedUsersCount'));
+        return view('home', compact('connectedConnectionsCount', 'pendingSentConnectionsCount', 'pendingReceivedConnectionsCount', 'suggestedUsersCount'));
     }
 
     public function getSuggestedConnections(Request $request)
@@ -48,7 +48,7 @@ class HomeController extends Controller
         ]);
     }
 
-    public function getSentRequest(Request $request)
+    public function getRequest(Request $request)
     {
         $limit = $request->limit;
         $skip = $request->skip;
@@ -56,16 +56,18 @@ class HomeController extends Controller
         $user = auth()->user();
         switch($mode) {
             case 'sent':
-                $sentConnections = $user->pendingSentConnections;
+                $pendingSentConnections = $user->pendingSentConnections;
                 return json_encode([
-                    'count' => count($sentConnections),
-                    'data' => view('components.request', ['requests' => $sentConnections, 'mode' => $mode])->render()
+                    'count' => count($pendingSentConnections),
+                    'data' => view('components.request', ['requests' => $pendingSentConnections, 'mode' => $mode])->render()
                 ]);
-                // return view('components.request', ['requests' => $sentConnections, 'mode' => $mode])->render();
                 break;
             case 'received':
-                $rejectedConnections = $user->rejectedConnections;
-                return $rejectedConnections;
+                $pendingReceivedConnections = $user->pendingReceivedConnections;
+                return json_encode([
+                    'count' => count($pendingReceivedConnections),
+                    'data' => view('components.request', ['requests' => $pendingReceivedConnections, 'mode' => $mode])->render()
+                ]);
                 break;
             default:
                 return view('components.request', ['requests' => []])->render();
@@ -77,7 +79,7 @@ class HomeController extends Controller
         
         DB::table('user_connections')->insert([
             'user_id' => auth()->user()->id,
-            'connection_id' => $request->suggestionId,
+            'connection_id' => $request->connectionId,
             'status' => 'pending',
             'created_at' => now(),
             'updated_at' => now()
@@ -86,6 +88,40 @@ class HomeController extends Controller
             'status' => 1,
             'message' => 'Connection Request sent!'
         ]);
+    }
+
+    public function deleteConnectionRequest(Request $request)
+    {
+        
+        $result = DB::table('user_connections')->where('user_id', auth()->user()->id)->where('connection_id', $request->connectionId)->delete();
+        if($result) {
+            return response()->json([
+                'status' => 1,
+                'message' => 'Connection Request withdrawed!'
+            ]);
+        } else {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Error: Something went wrong!'
+            ]);
+        }
+    }
+
+    public function acceptConnectionRequest(Request $request)
+    {
+        
+        $result = DB::table('user_connections')->where('user_id', $request->connectionId)->where('connection_id', auth()->user()->id)->update(['status' => User::CONNECTED_STATUS]);
+        if($result) {
+            return response()->json([
+                'status' => 1,
+                'message' => 'Connection Request accepted!'
+            ]);
+        } else {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Error: Something went wrong!'
+            ]);
+        }
     }
 
     private function suggestedUsers($limit, $skip)

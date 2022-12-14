@@ -34,7 +34,7 @@ function ajaxPost(url, type, data, onSuccessFunction) {
 
 
 function getRequests(mode) {
-  ajaxGet(`/get-sent-request?limit=${limit}&skip=${skipCounter}&mode=${mode}`, 'get', renderIndex)
+  ajaxGet(`/get-request?limit=${limit}&skip=${skipCounter}&mode=${mode}`, 'get', renderIndex)
 }
 
 function getMoreRequests(mode) {
@@ -82,10 +82,24 @@ function reRenderIndex(response) {
   displayedSuggestions == 100 ? $("#load_more_btn_parent").addClass('d-none') : $("#load_more_btn_parent").removeClass('d-none');
 }
 
-function postRequestSuccess(response) {
+function sendConnectionRequest(response) {
   alert(response.message)
   if(response.status == 1) {
     getSuggestions()
+  }
+}
+
+function deleteConnectionRequest(response) {
+  alert(response.message)
+  if(response.status == 1) {
+    getRequests('sent')
+  }
+}
+
+function acceptConnectionRequest(response) {
+  alert(response.message)
+  if(response.status == 1) {
+    getRequests('received')
   }
 }
 
@@ -94,22 +108,28 @@ function getMoreSuggestions() {
   ajaxGet(`/get-suggested-connections?limit=${limit}&skip=${displayedSuggestions}`, 'get', reRenderIndex)
 }
 
-function sendRequest(suggestionId) {
+function sendRequest(connectionId) {
   let data = {
-    suggestionId: suggestionId
+    connectionId: connectionId
   }
-  ajaxPost(`/send-connection-request`, 'post', data, postRequestSuccess)
+  ajaxPost(`/send-connection-request`, 'post', data, sendConnectionRequest)
 }
 
-function deleteRequest(userId, requestId) {
-  // your code here...
+function deleteRequest(connectionId) {
+  let data = {
+    connectionId: connectionId
+  }
+  ajaxPost(`/delete-connection-request`, 'post', data, deleteConnectionRequest)
 }
 
-function acceptRequest(userId, requestId) {
-  // your code here...
+function acceptRequest(connectionId) {
+  let data = {
+    connectionId: connectionId
+  }
+  ajaxPost(`/accept-connection-request`, 'post', data, acceptConnectionRequest)
 }
 
-function removeConnection(userId, connectionId) {
+function removeConnection(connectionId) {
   // your code here...
 }
 
