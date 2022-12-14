@@ -43,7 +43,7 @@ function getMoreRequests(mode) {
 }
 
 function getConnections() {
-  // your code here...
+  ajaxGet(`/get-connections?limit=${limit}&skip=${skipCounter}`, 'get', renderIndex)
 }
 
 function getMoreConnections() {
@@ -61,7 +61,7 @@ function getMoreConnectionsInCommon(userId, connectionId) {
 }
 
 function getSuggestions() {
-  ajaxGet(`/get-suggested-connections?limit=${limit}&skip=${skipCounter}`, 'get', renderIndex)
+  ajaxGet(`/get-suggestions?limit=${limit}&skip=${skipCounter}`, 'get', renderIndex)
 }
 
 function renderIndex(response) {
@@ -103,6 +103,13 @@ function acceptConnectionRequest(response) {
   }
 }
 
+function removeConnectionRequest(response) {
+  alert(response.message)
+  if(response.status == 1) {
+    getConnections()
+  }
+}
+
 function getMoreSuggestions() {
   let displayedSuggestions = $("#content > div").length;
   ajaxGet(`/get-suggested-connections?limit=${limit}&skip=${displayedSuggestions}`, 'get', reRenderIndex)
@@ -130,7 +137,10 @@ function acceptRequest(connectionId) {
 }
 
 function removeConnection(connectionId) {
-  // your code here...
+  let data = {
+    connectionId: connectionId
+  }
+  ajaxPost(`/remove-connection-request`, 'post', data, removeConnectionRequest)
 }
 
 function beforeSend() {

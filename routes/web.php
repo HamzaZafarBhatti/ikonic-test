@@ -22,9 +22,11 @@ Route::get('/', function () {
 
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
-Route::get('get-suggested-connections', [HomeController::class, 'getSuggestedConnections']);
+Route::get('get-suggestions', [HomeController::class, 'getSuggestions']);
+Route::get('get-connections', [HomeController::class, 'getConnections']);
 Route::get('get-request', [HomeController::class, 'getRequest']);
 
 Route::post('send-connection-request', [HomeController::class, 'sendConnectionRequest']);
 Route::post('delete-connection-request', [HomeController::class, 'deleteConnectionRequest']);
 Route::post('accept-connection-request', [HomeController::class, 'acceptConnectionRequest']);
+Route::post('remove-connection-request', [HomeController::class, 'removeConnectionRequest']);

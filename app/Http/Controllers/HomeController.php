@@ -28,16 +28,16 @@ class HomeController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $connectedConnectionsCount = $user->connectedConnections->count();
+        $connectedUsersCount = $this->connectedUsersCount();
         $pendingSentConnectionsCount = $user->pendingSentConnections->count();
         $pendingReceivedConnectionsCount = $user->pendingReceivedConnections->count();
         // return $user_ids;
         $suggestedUsersCount = $this->suggestedUsersCount();
         // return count($suggestedUsers);
-        return view('home', compact('connectedConnectionsCount', 'pendingSentConnectionsCount', 'pendingReceivedConnectionsCount', 'suggestedUsersCount'));
+        return view('home', compact('connectedUsersCount', 'pendingSentConnectionsCount', 'pendingReceivedConnectionsCount', 'suggestedUsersCount'));
     }
 
-    public function getSuggestedConnections(Request $request)
+    public function getSuggestions(Request $request)
     {
         $limit = $request->limit;
         $skip = $request->skip;
@@ -45,6 +45,17 @@ class HomeController extends Controller
         return json_encode([
             'count' => count($suggestedUsers),
             'data' => view('components.suggestion', ['suggestions' => $suggestedUsers])->render()
+        ]);
+    }
+
+    public function getConnections(Request $request)
+    {
+        $limit = $request->limit;
+        $skip = $request->skip;
+        $connectedUsers = $this->connectedUsers($limit, $skip);
+        return json_encode([
+            'count' => count($connectedUsers),
+            'data' => view('components.connection', ['connected' => $connectedUsers])->render()
         ]);
     }
 
@@ -107,6 +118,28 @@ class HomeController extends Controller
         }
     }
 
+    public function removeConnectionRequest(Request $request)
+    {
+        $userId = auth()->user()->id;
+        $connectionId = $request->connectionId;
+        $result = DB::table('user_connections')->where(function($q) use ($userId, $connectionId) {
+            $q->where('user_id', $userId)->where('connection_id', $connectionId);
+        })->orWhere(function($q) use ($userId, $connectionId) {
+            $q->where('user_id', $connectionId)->where('connection_id', $userId);
+        })->delete();
+        if($result) {
+            return response()->json([
+                'status' => 1,
+                'message' => 'Connection removed!'
+            ]);
+        } else {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Error: Something went wrong!'
+            ]);
+        }
+    }
+
     public function acceptConnectionRequest(Request $request)
     {
         
@@ -126,22 +159,35 @@ class HomeController extends Controller
 
     private function suggestedUsers($limit, $skip)
     {
-        $user = auth()->user();
+        $userId = auth()->user()->id;
         $sentRequestUserIds = User::join('user_connections', 'users.id', '=', 'user_connections.user_id')
-                    ->where('users.id', $user->id)->where('user_connections.status', 'pending')->pluck('user_connections.connection_id');
-        $receivedRequestUserIds = DB::table('user_connections')->where('connection_id', $user->id)->where('user_connections.status', 'pending')->pluck('user_id');
-        // return $sentRequestUserIds;
+                    ->where('users.id', $userId)->where('user_connections.status', 'pending')->pluck('user_connections.connection_id');
+        $receivedRequestUserIds = DB::table('user_connections')->where('connection_id', $userId)->where('user_connections.status', 'pending')->pluck('user_id');
         $userIds = Arr::collapse([$sentRequestUserIds, $receivedRequestUserIds]);
-        return User::select('id', 'name', 'email')->where('id', '!=', $user->id)->whereNotIn('id', $userIds)->limit($limit)->offset($skip)->get();
+        return User::select('id', 'name', 'email')->where('id', '!=', $userId)->whereNotIn('id', $userIds)->limit($limit)->offset($skip)->get();
     }
     private function suggestedUsersCount()
     {
-        $user = auth()->user();
+        $userId = auth()->user()->id;
         $sentRequestUserIds = User::join('user_connections', 'users.id', '=', 'user_connections.user_id')
-                    ->where('users.id', $user->id)->where('user_connections.status', 'pending')->pluck('user_connections.connection_id');
-        $receivedRequestUserIds = DB::table('user_connections')->where('connection_id', $user->id)->where('user_connections.status', 'pending')->pluck('user_id');
-        // return $sentRequestUserIds;
+                    ->where('users.id', $userId)->where('user_connections.status', 'pending')->pluck('user_connections.connection_id');
+        $receivedRequestUserIds = DB::table('user_connections')->where('connection_id', $userId)->where('user_connections.status', 'pending')->pluck('user_id');
         $userIds = Arr::collapse([$sentRequestUserIds, $receivedRequestUserIds]);
-        return User::where('id', '!=', $user->id)->whereNotIn('id', $userIds)->count();
+        return User::where('id', '!=', $userId)->whereNotIn('id', $userIds)->count();
+    }
+    private function connectedUsers($limit, $skip)
+    {
+        $userId = auth()->user()->id;
+        $forwardConnections = DB::table('user_connections')->where('user_id', $userId)->whereStatus(User::CONNECTED_STATUS)->pluck('connection_id');
+        $reverseConnections = DB::table('user_connections')->where('connection_id', $userId)->whereStatus(User::CONNECTED_STATUS)->pluck('user_id');
+        $userIds = Arr::collapse([$forwardConnections, $reverseConnections]);
+        return User::where('id', '!=', $userId)->whereIn('id', $userIds)->limit($limit)->offset($skip)->get();
+    }
+    public function connectedUsersCount()
+    {
+        $userId = auth()->user()->id;
+        return DB::table('user_connections')->whereStatus(User::CONNECTED_STATUS)->where(function($q) use ($userId) {
+            $q->where('user_id', $userId)->orWhere('connection_id', $userId);
+        })->count();
     }
 }
